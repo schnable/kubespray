@@ -1,4 +1,5 @@
 {
+  "cloud": "{{ azure_cloud }}"
   "tenantId": "{{ azure_tenant_id }}",
   "subscriptionId": "{{ azure_subscription_id }}",
   "aadClientId": "{{ azure_aad_client_id }}",
@@ -10,6 +11,7 @@
   "vnetName": "{{ azure_vnet_name }}",
   "vnetResourceGroup": "{{ azure_vnet_resource_group }}",
   "routeTableName": "{{ azure_route_table_name }}",
+  "vmType": "{{ azure_vmtype }}",
 {% if azure_primary_availability_set_name is defined %}
   "primaryAvailabilitySetName": "{{ azure_primary_availability_set_name }}",
 {%endif%}

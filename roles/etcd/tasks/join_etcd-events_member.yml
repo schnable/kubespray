@@ -1,12 +1,13 @@
 ---
 - name: Join Member | Add member to etcd-events cluster
-  shell: "{{ bin_dir }}/etcdctl --endpoints={{ etcd_events_access_addresses }} member add {{ etcd_member_name }} {{ etcd_events_peer_url }}"
+  shell: "{{ bin_dir }}/etcdctl member add {{ etcd_member_name }} {{ etcd_events_peer_url }}"
   register: member_add_result
   until: member_add_result.rc == 0
-  retries: 4
+  retries: "{{ etcd_retries }}"
   delay: "{{ retry_stagger | random + 3 }}"
-  when: target_node == inventory_hostname
   environment:
+    ETCDCTL_API: 2
+    ETCDCTL_ENDPOINTS: "{{ etcd_events_access_addresses }}"
     ETCDCTL_CERT_FILE: "{{ etcd_cert_dir }}/admin-{{ inventory_hostname }}.pem"
     ETCDCTL_KEY_FILE: "{{ etcd_cert_dir }}/admin-{{ inventory_hostname }}-key.pem"
 
@@ -21,16 +22,22 @@
           {{ etcd_member_name }}={{ etcd_events_peer_url }}
         {%- endif -%}
       {%- endfor -%}
-  when: target_node == inventory_hostname
 
 - name: Join Member | Ensure member is in etcd-events cluster
-  shell: "{{ bin_dir }}/etcdctl --no-sync --endpoints={{ etcd_events_access_addresses }} member list | grep -q {{ etcd_events_access_address }}"
+  shell: "{{ bin_dir }}/etcdctl --no-sync member list | grep -q {{ etcd_events_access_address }}"
   register: etcd_events_member_in_cluster
   changed_when: false
   check_mode: no
   tags:
     - facts
-  when: target_node == inventory_hostname
   environment:
+    ETCDCTL_API: 2
+    ETCDCTL_ENDPOINTS: "{{ etcd_events_access_addresses }}"
     ETCDCTL_CERT_FILE: "{{ etcd_cert_dir }}/admin-{{ inventory_hostname }}.pem"
     ETCDCTL_KEY_FILE: "{{ etcd_cert_dir }}/admin-{{ inventory_hostname }}-key.pem"
+
+- name: Configure | Ensure etcd-events is running
+  service:
+    name: etcd-events
+    state: started
+    enabled: yes
